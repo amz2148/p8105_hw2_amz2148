@@ -5,17 +5,19 @@ output: github_document
 
 Homework 2
 
+# Problem 0
+
+```{r load_libraries}
+library(tidyverse)
+library(readxl)
+```
+
 # Problem 1
 
-Here's a **code chunk** that samples from 
-a _normal distribution_:
 
-```{r}
-samp = rnorm(100)
-length(samp)
-```
 
 # Problem 2
 
-I can take the mean of the sample, too!
-The mean is `r mean(samp)`.
+
+
+
