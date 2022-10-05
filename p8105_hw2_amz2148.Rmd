@@ -18,6 +18,72 @@ library(readxl) #loads readxl package
 
 # Problem 1
 
+First we read, clean, and re-format (where needed) the data. We also retain only certain variables as instructed.
+
+```{r}
+trans_ent = 
+  read_csv("data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv",
+    col_types = cols(Route8 = "c", Route9 = "c", Route10 = "c", Route11 = "c")) %>% #reads in file, routes8-11 were in double format so changed to character
+  janitor::clean_names() %>% #cleans variable names
+  select(line, station_name, station_latitude, station_longitude, 
+         starts_with("route"), entry, exit_only, vending, entrance_type, ada) %>% #retains only the listed variables
+  mutate(entry = ifelse(entry == "YES", TRUE, FALSE)) #converts entry variable to logical type
+```
+
+With only these steps so far, the data is not tidy because the route1:route11 variables should be condensed into a long-format "route" variable that has the route number as values and a second variable that has the subway line (e.g., A, C, 1, 2, etc.) corresponding to that route. This non-tidy dataset has ``r nrow(trans_ent)`` rows (observations) and ``r ncol(trans_ent)`` columns (variables) including ``r names(trans_ent)``. To obtain this dataset from the original csv file, we read the file into R, changed the column types to character for route8:route11 (as these were originally in the double format), used the clean_names function to clean-up the variable names, and retained only certain variables. Finally, we used the mutate and ifelse functions to turn the entry variable into a logical variable from an original character type. 
+
+```{r}
+trans_ent %>% #df
+  select(station_name, line) %>% #selecting only station_name and line variables
+  distinct #identifying only observations with distinct values for this combination of variables
+```
+
+There are 465 distinct stations. This can be found using the distinct function by conditioning on station_name AND line (meaning a station will be considered distinct if the combination of station_name and line are different from all other stations).
+
+```{r}
+trans_ent %>%  #df
+  filter(ada == TRUE) %>% #filtering only data where ADA compliance is true
+  select(station_name, line) %>% #selecting only station_name and line variables
+  distinct #identifying only observations with distinct values for this combination of variables
+```
+
+There are 84 ADA-compliant, distinct stations. This is the same as the previous step, but also includes the pre-qualifier before selecting for distinct stations that only ADA-compliant stations should be taken into consideration.
+
+```{r}
+trans_ent %>%  #df
+  filter(vending == "NO") %>% #filtering only data without vending
+  pull(entry) %>% #pulling only entry as a vector
+  mean #mean of entry=true
+```
+
+37.7% of station entrances and exits without vending allow entrance. This can be determined by pulling the number of station observations where entry is true, but first using "no vending" as a prequalifier.
+
+```{r}
+trans_ent %>%  #df
+  pivot_longer(
+    route1:route11,
+    names_to = "route_number",
+    values_to = "route_name") %>% #convert data to longer format with route variables
+  filter(route_name == "A") %>% #filtering only data where the route name is A
+  select(station_name, line) %>% #selecting only these two variables
+  distinct #identifying only distinct stations based on station_name and line
+```
+
+60 distinct stations serve the A train.
+
+```{r}
+trans_ent %>%  #df
+  pivot_longer(
+    route1:route11,
+    names_to = "route_number",
+    values_to = "route_name") %>% #convert data to longer format with route variables
+  filter(route_name == "A", ada == TRUE) %>% #filtering only data where the route name is A and where ADA compliance is true
+  select(station_name, line) %>% #selecting only these two variables
+  distinct #identifying only distinct stations based on station_name and line
+```
+
+Of the 60 distinct stations that serve the A train, 17 distinct stations are ADA compliant.
+
 
 # Problem 2
 
@@ -96,7 +162,7 @@ snp =
   arrange(year, month) #sorts data by year and month
 ```
 
-Third, tidy the unemployment data so that it can be merged with the previous datasets. This process will involve switching from “wide” to “long” format; ensuring that key variables have the same name; and ensuring that key variables take the same values.
+Third, we tidy the unemployment data so that it can be merged with the previous datasets. This process involves switching from “wide” to “long” format; ensuring that key variables have the same name; and ensuring that key variables take the same values.
 
 ```{r unemployment}
 unemployment = 
@@ -117,7 +183,7 @@ pols_snp = left_join(pols_month, snp, by = c("year", "month")) #left join adds s
 pols_snp_unemp = left_join(pols_snp, unemployment, by = c("year", "month")) #left join adds unemployment data into pols_snp dataset
 ```
 
-The ``pols_month`` dataset included ``r nrow(pols_month)`` rows (observations) and ``r ncol(pols_month)`` columns (variables) including ``r names(pols_month)``. The data begins in January 1947 and ends in June 2015. It describes the number of republican and democrat governors, senators, and republicans and the party of the president.
+The ``pols_month`` dataset included ``r nrow(pols_month)`` rows (observations) and ``r ncol(pols_month)`` columns (variables) including ``r names(pols_month)``. The data begins in January 1947 and ends in June 2015. It describes the number of Republican and Democrat governors, senators, and representatives as well as the political party of the president.
 
 The ``snp`` dataset included ``r nrow(snp)`` rows (observations) and ``r ncol(snp)`` columns (variables) including ``r names(snp)``. The data begins in January 1950 and ends in July 2015. It describes the closing values of the S&P stock index from each associated date.
 
