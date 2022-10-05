@@ -18,7 +18,7 @@ library(readxl) #loads readxl package
 
 # Problem 1
 
-First we read and clean the data from the Mr. Trash Wheel sheet:
+First we read and clean the data from the Mr. Trash Wheel sheet under the following specifications:
 
 * specifying the sheet in the Excel file and to omit non-data entries (rows with notes / figures; columns containing notes) using arguments in read_excel
 * using reasonable variable names
@@ -59,14 +59,38 @@ trashwheel_tidy =
 In the resulting dataset, there are ``r nrow(trashwheel_tidy)`` rows (observations) of which ``r nrow(subset(trashwheel_tidy,machine == "mister"))`` observations are from the Mr. Trashwheel dataset and ``r nrow(subset(trashwheel_tidy,machine == "professor"))`` observations are from the Professor Trashwheel dataset. The combined dataset has ``r ncol(trashwheel_tidy)`` variables of which one is new: ``machine`` which identifies which dataset the observation is from. Other important variables include ``date``, ``dumpster``, ``weight_tons``, ``volume_cubic_yards``, and ``homes_powered``. The total weight of trash collected by Professor Trashwheel was ``r sum(trashwheel_tidy[trashwheel_tidy$machine == "professor",]$weight_tons)`` tons. The total number of sports balls collected by Mr. Trash Wheel in 2020 was ``r sum(trashwheel_tidy[trashwheel_tidy$machine == "mister" & trashwheel_tidy$year == "2020",]$sports_balls)`` balls.
 
 
-Note the number of observations in the resulting dataset and give examples of key variables. For available data, what was the total weight of trash collected by Professor Trash Wheel? What was the total number of sports balls collected by Mr. Trash Wheel in 2020?
-
-
-
-
-
 # Problem 2
 
+First, we clean the data from the pols-month.csv file. We use separate() to break up the variable mon into integer variables year, month, and day; replace month number with month name; create a president variable taking values gop and dem, and remove prez_dem and prez_gop; and remove the day variable.
 
+```{r pols_month}
+pols_month = 
+  read_csv(file = "data/fivethirtyeight_datasets/pols-month.csv") %>% 
+  separate(mon, into = c("year", "month", "day"), sep = '-') %>%
+  mutate(month = as.numeric(month), year = as.numeric(year), day = as.numeric(day)) %>%
+  mutate(month = month.abb[month]) %>%
+  mutate(month = factor(month, levels = month.abb)) %>%
+  mutate(president = case_when(prez_dem == 1 ~ "dem",
+    prez_dem != 1 ~ "gop")) %>%
+  select(-prez_dem, -prez_gop, -day) %>%
+  arrange(year, month)
+```
+
+Second, we clean the data in snp.csv using a similar process. For consistency across datasets, we arrange the data according to year and month, and organize so that year and month are the leading columns.
+
+
+
+
+Third, tidy the unemployment data so that it can be merged with the previous datasets. This process will involve switching from “wide” to “long” format; ensuring that key variables have the same name; and ensuring that key variables take the same values.
+
+
+
+
+Join the datasets by merging snp into pols, and merging unemployment into the result.
+
+
+
+
+Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset (e.g. give the dimension, range of years, and names of key variables).
 
 
