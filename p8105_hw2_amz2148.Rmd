@@ -68,30 +68,53 @@ First, we clean the data from the pols-month.csv file. We use separate() to brea
 
 ```{r pols_month}
 pols_month = 
-  read_csv(file = "data/fivethirtyeight_datasets/pols-month.csv") %>% 
-  separate(mon, into = c("year", "month", "day"), sep = '-') %>%
-  mutate(month = as.numeric(month), year = as.numeric(year), day = as.numeric(day)) %>%
-  mutate(month = month.abb[month]) %>%
-  mutate(month = factor(month, levels = month.abb)) %>%
-  mutate(president = case_when(prez_dem == 1 ~ "dem",
-    prez_dem != 1 ~ "gop")) %>%
-  select(-prez_dem, -prez_gop, -day) %>%
-  arrange(year, month)
+  read_csv(file = "data/fivethirtyeight_datasets/pols-month.csv") %>% #reads in csv file
+  janitor::clean_names() %>% #cleans variable names
+  separate(mon, into = c("year", "month", "day"), sep = '-') %>% #separates mon variable into year, month, day variables
+  mutate(month = as.numeric(month), year = as.numeric(year), day = as.numeric(day)) %>% #converts new variables from character to numeric
+  mutate(month = month.abb[month]) %>% #replaces month number with name
+  mutate(month = factor(month, levels = month.abb)) %>% #converts month name to factor variable
+  mutate(president = case_when(prez_dem == 1 ~ "dem", 
+    prez_dem != 1 ~ "gop")) %>% #creates new president variable
+  select(-prez_dem, -prez_gop, -day) %>% #removes prez_dem, prez_gap, and day variables
+  arrange(year, month) #sorts data by year and month
 ```
 
 Second, we clean the data in snp.csv using a similar process. For consistency across datasets, we arrange the data according to year and month, and organize so that year and month are the leading columns.
 
-
-
+```{r snp}
+snp = 
+  read_csv(file = "data/fivethirtyeight_datasets/snp.csv") %>% #reads in csv file
+  janitor::clean_names() %>% #cleans variable names
+  mutate(date = as.Date(date, format = c("%m/%d/%y"))) %>% #re-formats date variable
+  mutate(year = lubridate::year(date), 
+                month = lubridate::month(date), 
+                day = lubridate::day(date)) %>% #turns date variable into 3 separate variables
+  mutate(month = month.abb[month]) %>% #replaces month number with name
+  mutate(month = factor(month, levels = month.abb)) %>% #converts month name to factor variable
+  select(-day, -date) %>% #removes day and date variables
+  select(year, month, everything()) %>% #reorders columns
+  arrange(year, month) #sorts data by year and month
+```
 
 Third, tidy the unemployment data so that it can be merged with the previous datasets. This process will involve switching from “wide” to “long” format; ensuring that key variables have the same name; and ensuring that key variables take the same values.
 
+```{r unemployment}
+unemployment = 
+  read_csv(file = "data/fivethirtyeight_datasets/unemployment.csv") %>% #reads in csv file
+  rename(year = Year) %>% #changes case of year variable to lowercase (keeping months uppercase for later ease of merging with other files)
+  pivot_longer(
+    Jan:Dec,
+    names_to = "month", 
+    values_to = "unemployment_rate") %>% 
+  mutate(month = factor(month, levels = month.abb)) #converts month name to factor variable
+```
 
+Finally, we join the datasets by merging snp into pols, then merging unemployment into the result.
 
+```{r join}
 
-Join the datasets by merging snp into pols, and merging unemployment into the result.
-
-
+```
 
 
 Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset (e.g. give the dimension, range of years, and names of key variables).
