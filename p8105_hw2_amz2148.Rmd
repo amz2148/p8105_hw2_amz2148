@@ -56,7 +56,7 @@ trashwheel_tidy =
   bind_rows(mr_trashwheel, prof_trashwheel) %>% #combines two datasets into one
   janitor::clean_names() %>% #cleans variable names
   select(machine, dumpster, everything()) %>% #reorders columns
-  arrange (machine, dumpster) #sorts data by machine name and dumpster number
+  arrange(machine, dumpster) #sorts data by machine name and dumpster number
 ```
 
 In the resulting dataset, there are ``r nrow(trashwheel_tidy)`` rows (observations) of which ``r nrow(subset(trashwheel_tidy,machine == "mister"))`` observations are from the Mr. Trashwheel dataset and ``r nrow(subset(trashwheel_tidy,machine == "professor"))`` observations are from the Professor Trashwheel dataset. The combined dataset has ``r ncol(trashwheel_tidy)`` variables of which one is new: ``machine`` which identifies which dataset the observation is from. Other important variables include ``date``, ``dumpster``, ``weight_tons``, ``volume_cubic_yards``, and ``homes_powered``. The total weight of trash collected by Professor Trashwheel was ``r sum(trashwheel_tidy[trashwheel_tidy$machine == "professor",]$weight_tons)`` tons. The total number of sports balls collected by Mr. Trash Wheel in 2020 was ``r sum(trashwheel_tidy[trashwheel_tidy$machine == "mister" & trashwheel_tidy$year == "2020",]$sports_balls)`` balls.
@@ -86,18 +86,15 @@ Second, we clean the data in snp.csv using a similar process. For consistency ac
 snp = 
   read_csv(file = "data/fivethirtyeight_datasets/snp.csv") %>% #reads in csv file
   janitor::clean_names() %>% #cleans variable names
-  mutate(date = as.Date(date, format = c("%m/%d/%Y"))) %>% #re-formats date variable
-  mutate(date = as.Date(ifelse(date > "2015-07-01", format(date,"19%y/%"), format(date,"%m/%d/%y"))))
-  mutate(year = lubridate::year(date), 
-                month = lubridate::month(date), 
-                day = lubridate::day(date)) %>% #turns date variable into 3 separate variables
+  separate(date, into = c("month", "day", "year"), sep = '/') %>% 
+  mutate(year = ifelse(year > 15, paste("19",year, sep = ""), paste("20",year, sep = ""))) %>% 
+  mutate(month = as.numeric(month), year = as.numeric(year)) %>% #converts month and year variables from character to numeric
   mutate(month = month.abb[month]) %>% #replaces month number with name
   mutate(month = factor(month, levels = month.abb)) %>% #converts month name to factor variable
-  select(-day, -date) %>% #removes day and date variables
+  select(-day) %>% #removes day variable
   select(year, month, everything()) %>% #reorders columns
   arrange(year, month) #sorts data by year and month
 ```
-
 
 Third, tidy the unemployment data so that it can be merged with the previous datasets. This process will involve switching from “wide” to “long” format; ensuring that key variables have the same name; and ensuring that key variables take the same values.
 
@@ -115,10 +112,15 @@ unemployment =
 Finally, we join the datasets by merging snp into pols, then merging unemployment into the result.
 
 ```{r join}
-pols_snp = left_join(pols_month, snp, by = "year", "month")
+pols_snp = left_join(pols_month, snp, by = c("year", "month")) #left join adds snp data into pols_month dataset
+
+pols_snp_unemp = left_join(pols_snp, unemployment, by = c("year", "month")) #left join adds unemployment data into pols_snp dataset
 ```
 
+The ``pols_month`` dataset included ``r nrow(pols_month)`` rows (observations) and ``r ncol(pols_month)`` columns (variables) including ``r names(pols_month)``. The data begins in January 1947 and ends in June 2015. It describes the number of republican and democrat governors, senators, and republicans and the party of the president.
 
-Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset (e.g. give the dimension, range of years, and names of key variables).
+The ``snp`` dataset included ``r nrow(snp)`` rows (observations) and ``r ncol(snp)`` columns (variables) including ``r names(snp)``. The data begins in January 1950 and ends in July 2015. It describes the closing values of the S&P stock index from each associated date.
 
+The ``unemployment`` dataset included ``r nrow(unemployment)`` rows (observations) and ``r ncol(unemployment)`` columns (variables) including ``r names(unemployment)``. The data begins in January 1948 and ends in December 2015. It describes the percentage of unemployment from each associated date.
 
+The ``pols_snp_unemp`` dataset included ``r nrow(pols_snp_unemp)`` rows (observations) and ``r ncol(pols_snp_unemp)`` columns (variables) including ``r names(pols_snp_unemp)``. The dataset overall starts in January 1947 and ends in June 2015 as we created it by left_joining files to the ``pols_month`` dataset, whose range is carried over to the merged dataset. However, observations originally from the ``snp`` dataset only start in January 1950 in the merged dataset and observations originally from the ``unemployment`` dataset only start in January 1950 in the merged dataset.
