@@ -86,7 +86,8 @@ Second, we clean the data in snp.csv using a similar process. For consistency ac
 snp = 
   read_csv(file = "data/fivethirtyeight_datasets/snp.csv") %>% #reads in csv file
   janitor::clean_names() %>% #cleans variable names
-  mutate(date = as.Date(date, format = c("%m/%d/%y"))) %>% #re-formats date variable
+  mutate(date = as.Date(date, format = c("%m/%d/%Y"))) %>% #re-formats date variable
+  mutate(date = as.Date(ifelse(date > "2015-07-01", format(date,"19%y/%"), format(date,"%m/%d/%y"))))
   mutate(year = lubridate::year(date), 
                 month = lubridate::month(date), 
                 day = lubridate::day(date)) %>% #turns date variable into 3 separate variables
@@ -96,6 +97,7 @@ snp =
   select(year, month, everything()) %>% #reorders columns
   arrange(year, month) #sorts data by year and month
 ```
+
 
 Third, tidy the unemployment data so that it can be merged with the previous datasets. This process will involve switching from “wide” to “long” format; ensuring that key variables have the same name; and ensuring that key variables take the same values.
 
@@ -113,7 +115,7 @@ unemployment =
 Finally, we join the datasets by merging snp into pols, then merging unemployment into the result.
 
 ```{r join}
-
+pols_snp = left_join(pols_month, snp, by = "year", "month")
 ```
 
 
