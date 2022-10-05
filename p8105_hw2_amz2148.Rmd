@@ -18,6 +18,9 @@ library(readxl) #loads readxl package
 
 # Problem 1
 
+
+# Problem 2
+
 First we read and clean the data from the Mr. Trash Wheel sheet under the following specifications:
 
 * specifying the sheet in the Excel file and to omit non-data entries (rows with notes / figures; columns containing notes) using arguments in read_excel
@@ -59,7 +62,7 @@ trashwheel_tidy =
 In the resulting dataset, there are ``r nrow(trashwheel_tidy)`` rows (observations) of which ``r nrow(subset(trashwheel_tidy,machine == "mister"))`` observations are from the Mr. Trashwheel dataset and ``r nrow(subset(trashwheel_tidy,machine == "professor"))`` observations are from the Professor Trashwheel dataset. The combined dataset has ``r ncol(trashwheel_tidy)`` variables of which one is new: ``machine`` which identifies which dataset the observation is from. Other important variables include ``date``, ``dumpster``, ``weight_tons``, ``volume_cubic_yards``, and ``homes_powered``. The total weight of trash collected by Professor Trashwheel was ``r sum(trashwheel_tidy[trashwheel_tidy$machine == "professor",]$weight_tons)`` tons. The total number of sports balls collected by Mr. Trash Wheel in 2020 was ``r sum(trashwheel_tidy[trashwheel_tidy$machine == "mister" & trashwheel_tidy$year == "2020",]$sports_balls)`` balls.
 
 
-# Problem 2
+# Problem 3
 
 First, we clean the data from the pols-month.csv file. We use separate() to break up the variable mon into integer variables year, month, and day; replace month number with month name; create a president variable taking values gop and dem, and remove prez_dem and prez_gop; and remove the day variable.
 
